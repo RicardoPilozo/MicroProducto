@@ -10,15 +10,32 @@ class MovimientoController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $movimientos = Movimiento::all();
+        $perPage = $request->input('per_page', 10); // Número de elementos por página, 10 por defecto
+        $search = $request->input('search'); // Término de búsqueda
+
+        $query = Movimiento::query();
+
+        // Aplicar el filtro de búsqueda si se proporciona
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('numero_comprobante', 'LIKE', "%$search%")
+                    ->orWhere('descripcion_mov', 'LIKE', "%$search%");
+            });
+        }
+
+        $movimientos = $query->paginate($perPage);
 
         return response()->json([
-            'data' => $movimientos,
+            'data' => $movimientos->items(),
+            'current_page' => $movimientos->currentPage(),
+            'last_page' => $movimientos->lastPage(),
+            'total' => $movimientos->total(),
             'message' => 'Lista de movimientos obtenida correctamente.',
         ]);
     }
+
 
     /**
      * Show the form for creating a new resource.

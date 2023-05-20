@@ -14,6 +14,7 @@ class ProductoController extends Controller
     /**
      * Display a listing of the resource.
      */
+    /*
     public function index()
     {
         $registros = producto::join('proveedor', 'producto.id_proveedor', '=', 'proveedor.id_proveedor')
@@ -22,6 +23,46 @@ class ProductoController extends Controller
                             ->orderBy('producto.id_producto', 'asc')
                             ->get();
         return response()->json($registros);
+    }*/
+    
+    
+    public function index(Request $request)
+    {
+        $perPage = $request->input('per_page', 10); // Número de elementos por página, valor por defecto: 10
+        $page = $request->input('page', 1); // Página actual, valor por defecto: 1
+        $search = $request->input('search'); // Término de búsqueda, opcional
+
+        $query = producto::join('proveedor', 'producto.id_proveedor', '=', 'proveedor.id_proveedor')
+            ->join('categoria', 'producto.id_categoria', '=', 'categoria.id_categoria')
+            ->select('producto.id_producto', 'producto.nombre_producto', 'producto.precio_compra', 'producto.precio_venta1', 'producto.precio_venta2', 'producto.precio_venta3', 'producto.precio_venta4', 'producto.codigo_qr', 'producto.marca_prod', 'producto.modelo_prod', 'producto.codigo_prod', 'producto.descripcion_prod', 'producto.estado_prod', \DB::raw("CONCAT(proveedor.nombre_prove, ' ', proveedor.apellido_prove) AS nombre_proveedor"), 'categoria.nombre_cat')
+            ->orderBy('producto.id_producto', 'asc');
+
+        if ($search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('producto.nombre_producto', 'LIKE', "%$search%")
+                    ->orWhere('producto.descripcion_prod', 'LIKE', "%$search%")
+                    ->orWhere('proveedor.nombre_prove', 'LIKE', "%$search%")
+                    ->orWhere('proveedor.apellido_prove', 'LIKE', "%$search%")
+                    ->orWhere('categoria.nombre_cat', 'LIKE', "%$search%");
+            });
+        }
+
+        $total = $query->count();
+
+        if ($total === 0) {
+            return response()->json(['message' => 'Producto no encontrado'], 404);
+        }
+
+        $registros = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return response()->json([
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+        ]);
     }
 
 

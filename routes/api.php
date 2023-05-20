@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\MovimientoController;
+use App\Http\Controllers\DetalleController;
 
 
 Route::get('/Producto', [ProductoController::class, 'index']);
@@ -34,3 +35,9 @@ Route::delete('/proveedores/{proveedor}', [ProveedorController::class, 'destroy'
 
 
 Route::get('/movimientos', [MovimientoController::class, 'index']);
+
+
+
+
+
+Route::get('/detalle', [DetalleController::class, 'index']);
