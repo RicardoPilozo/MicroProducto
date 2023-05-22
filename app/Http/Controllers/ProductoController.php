@@ -11,20 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class ProductoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    /*
-    public function index()
-    {
-        $registros = producto::join('proveedor', 'producto.id_proveedor', '=', 'proveedor.id_proveedor')
-                            ->join('categoria', 'producto.id_categoria', '=', 'categoria.id_categoria')
-                            ->select('producto.id_producto', 'producto.nombre_producto', 'producto.precio_compra', 'producto.precio_venta1', 'producto.precio_venta2', 'producto.precio_venta3', 'producto.precio_venta4', 'producto.codigo_qr', 'producto.marca_prod', 'producto.modelo_prod', 'producto.codigo_prod', 'producto.descripcion_prod', 'producto.estado_prod', \DB::raw("CONCAT(proveedor.nombre_prove, ' ', proveedor.apellido_prove) AS nombre_proveedor"), 'categoria.nombre_cat')
-                            ->orderBy('producto.id_producto', 'asc')
-                            ->get();
-        return response()->json($registros);
-    }*/
-    
     
     public function index(Request $request)
     {
@@ -65,9 +51,7 @@ class ProductoController extends Controller
         ]);
     }
 
-
     
-
     /**
      * Store a newly created resource in storage.
      */

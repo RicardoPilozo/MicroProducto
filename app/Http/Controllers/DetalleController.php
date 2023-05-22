@@ -7,9 +7,7 @@ use Illuminate\Http\Request;
 
 class DetalleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+/*************************************************************************** */
     public function index(Request $request)
     {
         // Obtener parámetros de la consulta
@@ -36,53 +34,85 @@ class DetalleController extends Controller
 
         return response()->json($detalles);
     }
-
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+/*************************************************************************** */
     public function store(Request $request)
     {
-        //
-    }
+        // Validar los datos de entrada
+        $validator = Validator::make($request->all(), [
+            'cantidad' => 'required|integer',
+            'valor_unitario' => 'required|numeric',
+            'id_inventario' => 'required|integer',
+            'id_movimiento' => 'required|integer',
+            'id_producto' => 'required|integer',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(detalle $detalle)
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        // Crear el detalle
+        $detalle = Detalle::create([
+            'cantidad' => $request->input('cantidad'),
+            'valor_unitario' => $request->input('valor_unitario'),
+            'id_inventario' => $request->input('id_inventario'),
+            'id_movimiento' => $request->input('id_movimiento'),
+            'id_producto' => $request->input('id_producto'),
+        ]);
+
+        if (!$detalle) {
+            return response()->json(['error' => 'No se pudo crear el detalle'], 500);
+        }
+
+        // Devolver la respuesta exitosa
+        return response()->json(['message' => 'Detalle creado correctamente', 'detalle' => $detalle], 201);
+    }
+/*************************************************************************** */
+    public function show(Detalle $detalle)
     {
-        //
-    }
+        try {
+            $detalle = Detalle::findOrFail($detalle->id_detalle);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'El detalle no existe'], 404);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(detalle $detalle)
-    {
-        //
-    }
+        // Realizar las operaciones necesarias o retornar la información requerida
+        // ...
 
-    /**
-     * Update the specified resource in storage.
-     */
+        // Ejemplo: Retornar el detalle como respuesta en formato JSON
+        return response()->json($detalle);
+    }
+/*************************************************************************** */
     public function update(Request $request, detalle $detalle)
     {
-        //
-    }
+        // Comprobar si el detalle existe
+        $existingDetalle = Detalle::find($detalle->id_detalle);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(detalle $detalle)
-    {
-        //
+        if (!$existingDetalle) {
+            return response()->json(['message' => 'El detalle no existe'], 404);
+        }
+
+        // Actualizar los datos del detalle
+        $existingDetalle->cantidad = $request->input('cantidad');
+        $existingDetalle->valor_unitario = $request->input('valor_unitario');
+        // Actualizar los otros campos según corresponda
+
+        // Guardar los cambios en la base de datos
+        $existingDetalle->save();
+
+        return response()->json(['message' => 'Detalle actualizado correctamente'], 200);
     }
+/*************************************************************************** */
+    public function destroy(Detalle $detalle)
+    {
+        try {
+            $detalle = Detalle::findOrFail($detalle->id_detalle);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'El detalle no existe'], 404);
+        }
+        // Eliminar el detalle de la base de datos
+        $detalle->delete();
+        // Opcional: Redireccionar o devolver una respuesta adecuada
+        return response()->json(['message' => 'Detalle eliminado con éxito']);
+    }
+/*************************************************************************** */
 }
