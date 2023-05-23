@@ -14,22 +14,22 @@ class ProductoController extends Controller
     
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10); // Número de elementos por página, valor por defecto: 10
-        $page = $request->input('page', 1); // Página actual, valor por defecto: 1
+        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
         $search = $request->input('search'); // Término de búsqueda, opcional
 
         $query = producto::join('proveedor', 'producto.id_proveedor', '=', 'proveedor.id_proveedor')
             ->join('categoria', 'producto.id_categoria', '=', 'categoria.id_categoria')
-            ->select('producto.id_producto', 'producto.nombre_producto', 'producto.precio_compra', 'producto.precio_venta1', 'producto.precio_venta2', 'producto.precio_venta3', 'producto.precio_venta4', 'producto.codigo_qr', 'producto.marca_prod', 'producto.modelo_prod', 'producto.codigo_prod', 'producto.descripcion_prod', 'producto.estado_prod', \DB::raw("CONCAT(proveedor.nombre_prove, ' ', proveedor.apellido_prove) AS nombre_proveedor"), 'categoria.nombre_cat')
+            ->leftJoin('inventario', 'producto.id_producto', '=', 'inventario.id_producto')
+            ->select('producto.id_producto', 'producto.nombre_producto', 'producto.precio_compra', 'producto.precio_venta1', 'producto.precio_venta2', 'producto.precio_venta3', 'producto.precio_venta4', 'producto.codigo_qr', 'producto.marca_prod', 'producto.modelo_prod', 'producto.codigo_prod', 'producto.descripcion_prod', 'producto.estado_prod', \DB::raw("CONCAT(proveedor.nombre_prove, ' ', proveedor.apellido_prove) AS nombre_proveedor"), 'categoria.nombre_cat', 'inventario.cantidad_inventario')
             ->orderBy('producto.id_producto', 'asc');
 
         if ($search) {
             $query->where(function ($query) use ($search) {
-                $query->where('producto.nombre_producto', 'LIKE', "%$search%")
-                    ->orWhere('producto.descripcion_prod', 'LIKE', "%$search%")
-                    ->orWhere('proveedor.nombre_prove', 'LIKE', "%$search%")
-                    ->orWhere('proveedor.apellido_prove', 'LIKE', "%$search%")
-                    ->orWhere('categoria.nombre_cat', 'LIKE', "%$search%");
+                $query->where('producto.modelo_prod', 'LIKE', "%$search%")
+                    ->orWhere('producto.marca_prod', 'LIKE', "%$search%")
+                    ->orWhere('producto.codigo_prod', 'LIKE', "%$search%")
+                    ->orWhere('producto.nombre_producto', 'LIKE', "%$search%");
             });
         }
 
@@ -74,6 +74,16 @@ class ProductoController extends Controller
         $producto->id_categoria = $request->input('id_categoria');
 
         $producto->save();
+        
+        $idProductoCreado = $producto->id_producto;
+
+        $inventario = new Inventario;
+        $inventario->estado_inv = 1;
+        $inventario->cantidad_inventario = $request->input('cantidad_inventario');
+        $inventario->descripcion_inv = $request->input('descripcion_prod');
+        $inventario->id_producto = $idProductoCreado;
+
+        $inventario->save();
 
         return response()->json(['message' => 'Producto agregado exitosamente'], 201);
     

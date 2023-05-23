@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\detalle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
 
 class DetalleController extends Controller
 {

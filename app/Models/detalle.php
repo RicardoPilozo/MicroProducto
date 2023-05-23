@@ -12,4 +12,13 @@ class detalle extends Model
     protected $table = 'detalle';
     
     protected $primaryKey = 'id_detalle';
+
+    protected $fillable = [
+        'cantidad',
+        'valor_unitario',
+        'id_inventario',
+        'id_movimiento',
+        'id_producto',
+    ];
+    
 }

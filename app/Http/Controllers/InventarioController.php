@@ -14,23 +14,39 @@ class InventarioController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $inventarios = Inventario::select(
-                            'inventario.id_inventario', 
-                            DB::raw("CASE WHEN inventario.estado_inv = 1 THEN 'activo' ELSE 'inactivo' END as estado_inv"),
-                            'inventario.cantidad_inventario', 
-                            'inventario.descripcion_inv', 
-                            'producto.nombre_producto'
-                        )
-                        ->leftJoin('producto', 'inventario.id_producto', '=', 'producto.id_producto')
-                        ->orderBy('inventario.id_inventario')
-                        ->get();
-    
-        $response = [        'status' => 'success',        'message' => 'Inventarios obtenidos correctamente.',        'data' => $inventarios,    ];
-    
+        $perPage = $request->input('per_page', 10); // Cantidad de registros por página, 10 por defecto
+        $search = $request->input('search'); // Término de búsqueda
+        $page = $request->input('page', 1); // Página actual, 1 por defecto
+
+        $query = Inventario::select(
+            'inventario.id_inventario',
+            DB::raw("CASE WHEN inventario.estado_inv = 1 THEN 'activo' ELSE 'inactivo' END as estado_inv"),
+            'inventario.cantidad_inventario',
+            'inventario.descripcion_inv',
+            'producto.nombre_producto'
+        )
+            ->leftJoin('producto', 'inventario.id_producto', '=', 'producto.id_producto');
+
+        // Aplicar filtro de búsqueda si se proporciona un término de búsqueda
+        if ($search) {
+            $query->where('producto.nombre_producto', 'LIKE', "%$search%");
+        }
+
+        $inventarios = $query->orderBy('inventario.id_inventario')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        $response = [
+            'status' => 'success',
+            'message' => 'Inventarios obtenidos correctamente.',
+            'data' => $inventarios,
+        ];
+
         return response()->json($response, 200);
     }
+
+
     
     /**
      * Store a newly created resource in storage.
