@@ -9,24 +9,53 @@ use Illuminate\Validation\Rule;
 
 class ProveedorController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $proveedores = Proveedor::all();
+        $query = Proveedor::query();
+
+        // Búsqueda específica con LIKE
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where('nombre_prove', 'LIKE', '%' . $search . '%')
+                ->orWhere('apellido_prove', 'LIKE', '%' . $search . '%')
+                ->orWhere('empresa_prove', 'LIKE', '%' . $search . '%')
+                ->orWhere('ciudad_prove', 'LIKE', '%' . $search . '%')
+                ->orWhere('cargo_prove', 'LIKE', '%' . $search . '%');
+        }
+
+        // Paginación
+        $perPage = $request->input('per_page', 10); // Default per_page value is 10
+        $page = $request->input('page', 1); // Default page value is 1
+        $proveedores = $query->paginate($perPage);
+
+        // Obtener la colección de proveedores
+        $proveedoresCollection = $proveedores->getCollection();
+
+        // Transformar la colección en el formato deseado
+        $data = $proveedoresCollection->map(function ($proveedor) {
+            return [
+                'id_proveedor' => $proveedor->id_proveedor,
+                'nombre_prove' => $proveedor->nombre_prove,
+                'apellido_prove' => $proveedor->apellido_prove,
+                'empresa_prove' => $proveedor->empresa_prove,
+                'cargo_prove' => $proveedor->cargo_prove,
+                'ciudad_prove' => $proveedor->ciudad_prove,
+                'celular_prove' => $proveedor->celular_prove,
+                'estado_prove' => $proveedor->estado_prove,
+                'updated_at' => $proveedor->updated_at,
+                'created_at' => $proveedor->created_at,
+            ];
+        });
 
         return response()->json([
-            'data' => $proveedores
+            'data' => $data,
+            'current_page' => $proveedores->currentPage(),
+            'per_page' => $proveedores->perPage(),
+            'total' => $proveedores->total(),
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    
     public function store(Request $request)
     {
         $rules = [
