@@ -8,7 +8,7 @@ use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\DetalleController;
-
+use App\Http\Controllers\CategoriaController;
 
 Route::get('/producto', [ProductoController::class, 'index']);
 Route::post('/aggProducto', [ProductoController::class, 'store']);
@@ -45,5 +45,5 @@ Route::put('/detalle/{detalle}', [DetalleController::class, 'update']);
 Route::delete('/detalle/{detalle}', [DetalleController::class, 'destroy']);
 
 
-
+Route::get('/categoria', [CategoriaController::class, 'index']);
 
