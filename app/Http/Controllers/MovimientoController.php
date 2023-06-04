@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\movimiento;
 use App\Models\usuario;
+use App\Models\cliente;
 use Illuminate\Http\Request;
 
 class MovimientoController extends Controller
@@ -22,7 +23,8 @@ class MovimientoController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('numero_comprobante', 'LIKE', "%$search%")
-                    ->orWhere('descripcion_mov', 'LIKE', "%$search%");
+                    ->orWhere('descripcion_mov', 'LIKE', "%$search%")
+                    ->orWhere('id_cliente', 'LIKE', "%$search%");
             });
         }
 
@@ -46,7 +48,8 @@ class MovimientoController extends Controller
             'tipo_mov' => 'required|string|max:50',
             'descripcion_mov' => 'required|string|max:200',
             'valor_total_mov' => 'required|numeric',
-            'id_usuario' => 'required|integer|exists:usuario,id_usuario' // Validar la existencia del usuario en la tabla 'usuarios'
+            'id_usuario' => 'required|integer|exists:usuario,id_usuario', // Validar la existencia del usuario en la tabla 'usuarios'
+            'id_cliente' => 'integer'
         ]);
 
         // Verificar si el usuario existe en la base de datos
@@ -54,6 +57,12 @@ class MovimientoController extends Controller
         if (!$usuario) {
             return response()->json(['error' => 'El usuario no existe'], 404);
         }
+        // Verificar si el usuario existe en la base de datos
+        $usuario = Cliente::find($validatedData['id_cliente']);
+        if (!$usuario) {
+            return response()->json(['error' => 'El cliente no existe'], 404);
+        }
+        
 
         // Crear una nueva instancia del modelo Movimiento
         $movimiento = new Movimiento;
@@ -65,6 +74,7 @@ class MovimientoController extends Controller
         $movimiento->descripcion_mov = $validatedData['descripcion_mov'];
         $movimiento->valor_total_mov = $validatedData['valor_total_mov'];
         $movimiento->id_usuario = $validatedData['id_usuario'];
+        $movimiento->id_cliente = $validatedData['id_cliente'];
 
         // Guardar el movimiento en la base de datos
         $movimiento->save();
