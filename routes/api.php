@@ -22,6 +22,7 @@ Route::post('/inventario', [InventarioController::class, 'store']);
 Route::get('/inventario/{idInventario}', [InventarioController::class, 'show']);
 Route::put('/inventario/{inventario}', [InventarioController::class, 'update']);
 Route::delete('/inventario/{inventario}', [InventarioController::class, 'destroy']);
+Route::patch('/inventario/actualizar', [InventarioController::class, 'actualizarCantidadInventario']);
 
 
 Route::get('/proveedores', [ProveedorController::class, 'index']);

@@ -135,5 +135,25 @@ class InventarioController extends Controller
         return response()->json(['message' => 'El inventario ha sido eliminado correctamente']);
     }
 
+   
+
+    public function actualizarCantidadInventario(Request $request)
+    {
+        $idProducto = $request->input('id_producto');
+        $nuevaCantidad = $request->input('cantidad_inventario');
+
+        $inventario = Inventario::where('id_producto', $idProducto)->first();
+        
+        if ($inventario) {
+            $inventario->cantidad_inventario = $nuevaCantidad;
+            $inventario->save();
+
+            return response()->json(['message' => 'Inventario actualizado correctamente'], 200);
+        } else {
+            return response()->json(['message' => 'No se encontró el inventario para ese producto'], 404);
+        }
+    }
+
+
 
 }

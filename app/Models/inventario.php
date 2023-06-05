@@ -16,4 +16,13 @@ class inventario extends Model
     protected $table = 'inventario';
     
     protected $primaryKey = 'id_inventario';
+
+    protected $fillable = [
+        'estado_inv',
+        'cantidad_inventario',
+        'descripcion_inv',
+        'id_producto',
+        'created_at',
+        'updated_at',
+    ];
 }
