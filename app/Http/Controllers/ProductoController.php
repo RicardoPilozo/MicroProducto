@@ -21,8 +21,14 @@ class ProductoController extends Controller
         $query = producto::join('proveedor', 'producto.id_proveedor', '=', 'proveedor.id_proveedor')
             ->join('categoria', 'producto.id_categoria', '=', 'categoria.id_categoria')
             ->leftJoin('inventario', 'producto.id_producto', '=', 'inventario.id_producto')
-            ->select('producto.id_producto', 'producto.nombre_producto', 'producto.precio_compra', 'producto.precio_venta1', 'producto.precio_venta2', 'producto.precio_venta3', 'producto.precio_venta4', 'producto.codigo_qr', 'producto.marca_prod', 'producto.modelo_prod', 'producto.codigo_prod', 'producto.descripcion_prod', 'producto.estado_prod', \DB::raw("CONCAT(proveedor.nombre_prove, ' ', proveedor.apellido_prove) AS nombre_proveedor"), 'categoria.nombre_cat', 'inventario.cantidad_inventario')
-            ->orderBy('producto.id_producto', 'asc');
+            ->select('producto.id_producto', 'producto.nombre_producto', 'producto.precio_compra', 
+            'producto.precio_venta1', 'producto.precio_venta2', 'producto.precio_venta3', 
+            'producto.precio_venta4', 'producto.codigo_qr', 'producto.marca_prod', 
+            'producto.modelo_prod', 'producto.codigo_prod', 'producto.descripcion_prod', 
+            'producto.estado_prod', \DB::raw("CONCAT(proveedor.nombre_prove, ' ', proveedor.apellido_prove)
+             AS nombre_proveedor"), 'categoria.nombre_cat', 'inventario.cantidad_inventario', 'producto.id_proveedor', 'producto.id_categoria' )
+            ->orderBy('producto.id_producto', 'asc')
+            ->where('producto.estado_prod', 1);
 
         if ($search) {
             $query->where(function ($query) use ($search) {
@@ -130,10 +136,10 @@ class ProductoController extends Controller
         $producto->estado_prod = $request->input('estado_prod');
         $producto->id_proveedor = $request->input('id_proveedor');
         $producto->id_categoria = $request->input('id_categoria');
-
+        $confirmacion = true;
         $producto->save();
 
-        return response()->json(['message' => 'Producto actualizado con éxito', 'data' => $producto], 200);
+        return response()->json(['message' => 'Producto actualizado con éxito', 'data' => $producto, 'confirmacion' => $confirmacion], 200);
     }
 
 
@@ -152,13 +158,16 @@ class ProductoController extends Controller
 
         $inventario = Inventario::where('id_producto', $id)->get();
         foreach($inventario as $item){
-            $item->delete();
+            $item->estado_inv = 0;
+            $item->save();
         }
 
-        $producto->delete();
+        $producto->estado_prod = 0;
+        $producto->save();
 
         return response()->json([
-            'message' => 'Producto eliminado correctamente'
+            'message' => 'Producto desactivado correctamente'
         ], 200);
     }
+
 }
