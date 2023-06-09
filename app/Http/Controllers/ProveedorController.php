@@ -11,48 +11,40 @@ class ProveedorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Proveedor::query();
+        
+        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
+        $search = $request->input('search'); // Término de búsqueda, opcional
 
-        // Búsqueda específica con LIKE
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where('nombre_prove', 'LIKE', '%' . $search . '%')
-                ->orWhere('apellido_prove', 'LIKE', '%' . $search . '%')
-                ->orWhere('empresa_prove', 'LIKE', '%' . $search . '%')
-                ->orWhere('ciudad_prove', 'LIKE', '%' . $search . '%')
-                ->orWhere('cargo_prove', 'LIKE', '%' . $search . '%');
+        $query = Proveedor::query()
+        ->orderBy('proveedor.nombre_prove', 'asc')
+        ->where('proveedor.estado_prove', 1);
+
+        if ($search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('proveedor.nombre_prove', 'LIKE', "%$search%")
+                    ->orWhere('proveedor.apellido_prove', 'LIKE', "%$search%")
+                    ->orWhere('proveedor.empresa_prove', 'LIKE', "%$search%")
+                    ->orWhere('proveedor.cargo_prove', 'LIKE', "%$search%")
+                    ->orWhere('proveedor.ciudad_prove', 'LIKE', "%$search%")
+                    ->orWhere('proveedor.celular_prove', 'LIKE', "%$search%");
+            });
         }
 
-        // Paginación
-        $perPage = $request->input('per_page', 10); // Default per_page value is 10
-        $page = $request->input('page', 1); // Default page value is 1
-        $proveedores = $query->paginate($perPage);
+        $total = $query->count();
 
-        // Obtener la colección de proveedores
-        $proveedoresCollection = $proveedores->getCollection();
 
-        // Transformar la colección en el formato deseado
-        $data = $proveedoresCollection->map(function ($proveedor) {
-            return [
-                'id_proveedor' => $proveedor->id_proveedor,
-                'nombre_prove' => $proveedor->nombre_prove,
-                'apellido_prove' => $proveedor->apellido_prove,
-                'empresa_prove' => $proveedor->empresa_prove,
-                'cargo_prove' => $proveedor->cargo_prove,
-                'ciudad_prove' => $proveedor->ciudad_prove,
-                'celular_prove' => $proveedor->celular_prove,
-                'estado_prove' => $proveedor->estado_prove,
-                'updated_at' => $proveedor->updated_at,
-                'created_at' => $proveedor->created_at,
-            ];
-        });
+        $registros = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
 
         return response()->json([
-            'data' => $data,
-            'current_page' => $proveedores->currentPage(),
-            'per_page' => $proveedores->perPage(),
-            'total' => $proveedores->total(),
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
         ]);
+
     }
 
     
@@ -118,27 +110,27 @@ class ProveedorController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Proveedor $proveedor)
+    public function update(Request $request, $id_proveedor)
     {
-        // Validar si ya existe un proveedor con el mismo ID
-        $existingProveedor = Proveedor::find($proveedor->id_proveedor);
-        if (!$existingProveedor) {
+        $proveedor = Proveedor::find($id_proveedor);
+
+        if (!$proveedor) {
             return response()->json([
                 'success' => false,
                 'message' => 'Proveedor no encontrado'
-            ], 404);
+            ]);
         }
     
         // Actualizar los datos del proveedor campo por campo
-        $existingProveedor->nombre_prove = $request->input('nombre_prove', $existingProveedor->nombre_prove);
-        $existingProveedor->apellido_prove = $request->input('apellido_prove', $existingProveedor->apellido_prove);
-        $existingProveedor->empresa_prove = $request->input('empresa_prove', $existingProveedor->empresa_prove);
-        $existingProveedor->cargo_prove = $request->input('cargo_prove', $existingProveedor->cargo_prove);
-        $existingProveedor->ciudad_prove = $request->input('ciudad_prove', $existingProveedor->ciudad_prove);
-        $existingProveedor->celular_prove = $request->input('celular_prove', $existingProveedor->celular_prove);
-        $existingProveedor->estado_prove = $request->input('estado_prove', $existingProveedor->estado_prove);
+        $proveedor->nombre_prove = $request->input('nombre_prove');
+        $proveedor->apellido_prove = $request->input('apellido_prove');
+        $proveedor->empresa_prove = $request->input('empresa_prove');
+        $proveedor->cargo_prove = $request->input('cargo_prove');
+        $proveedor->ciudad_prove = $request->input('ciudad_prove');
+        $proveedor->celular_prove = $request->input('celular_prove');
+        $proveedor->estado_prove = $request->input('estado_prove');
     
-        $existingProveedor->save();
+        $proveedor->save();
     
         return response()->json([
             'success' => true,
@@ -150,23 +142,24 @@ class ProveedorController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Proveedor $proveedor)
+    
+    public function destroy($id)
     {
-        // Verificar si el proveedor existe
+        $proveedor = Proveedor::find($id);
+
         if (!$proveedor) {
             return response()->json([
-                'success' => false,
-                'message' => 'Proveedor no encontrado'
+                'message' => 'El producto no existe'
             ], 404);
         }
 
-        // Eliminar el proveedor
-        $proveedor->delete();
+
+        $proveedor->estado_prove = 0;
+        $proveedor->save();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Proveedor eliminado exitosamente'
-        ]);
+            'message' => 'Proveedor desactivado correctamente'
+        ], 200);
     }
 
 }

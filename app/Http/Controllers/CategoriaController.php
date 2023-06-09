@@ -12,27 +12,35 @@ class CategoriaController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Categoria::query();
+        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
+        $search = $request->input('search'); // Término de búsqueda, opcional
 
-        // Búsqueda por nombre_cat
-        if ($request->has('nombre_cat')) {
-            $query->where('nombre_cat', 'LIKE', '%' . $request->input('nombre_cat') . '%');
+        $query = Categoria::query()
+        ->orderBy('categoria.nombre_cat', 'asc')
+        ->where('categoria.estado_cat', 1);
+
+        
+        if ($search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('categoria.nombre_cat', 'LIKE', "%$search%")
+                    ->orWhere('categoria.estado_cat', 'LIKE', "%$search%");
+            });
         }
 
-        // Búsqueda por estado_cat
-        if ($request->has('estado_cat')) {
-            $query->where('estado_cat', 'LIKE', '%' . $request->input('estado_cat') . '%');
-        }
+        $total = $query->count();
+        
 
-        // Paginación
-        $perPage = $request->has('per_page') ? $request->input('per_page') : 10;
-        $categories = $query->paginate($perPage);
+        $registros = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
 
         return response()->json([
-            'data' => $categories->items(),
-            'current_page' => $categories->currentPage(),
-            'per_page' => $categories->perPage(),
-            'total' => $categories->total(),
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' =>  $total,
         ]);
     }
 
@@ -42,7 +50,13 @@ class CategoriaController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $categoria = new Categoria;
+        $categoria->nombre_cat = $request->input('nombre_cat');
+        $categoria->descripcion_cat = $request->input('descripcion_cat');
+        $categoria->estado_cat = 1;
+
+        $categoria->save();
+        return response()->json(['message' => 'Categoría agregado exitosamente'], 201);
     }
 
     /**
@@ -56,16 +70,44 @@ class CategoriaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, categoria $categoria)
+    public function update(Request $request, $id_categoria)
     {
         //
+        $categoria = Categoria::find($id_categoria);
+
+        if (!$categoria) {
+            return response()->json(['message' => 'Categoria no encontrada'], 404);
+        }
+
+        $categoria->nombre_cat = $request->input('nombre_cat');
+        $categoria->descripcion_cat = $request->input('descripcion_cat');
+        $confirmacion = true;
+        $categoria->save();
+        return response()->json(['message' => 'Categoria actualizada con éxito', 'data' => $categoria, 'confirmacion' => $confirmacion], 200);
+
     }
+    
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(categoria $categoria)
+    public function destroy($id)
     {
         //
+        $categoria = Categoria::find($id);
+        if (!$categoria) {
+            return response()->json([
+                'message' => 'La categoria no existe'
+            ], 404);
+        }
+
+        $categoria->estado_cat = 0;
+        $categoria->save();
+
+        return response()->json([
+            'message' => 'Categoria desactivada correctamente'
+        ], 200);
     }
+
+    
 }

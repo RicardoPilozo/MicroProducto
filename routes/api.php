@@ -47,4 +47,7 @@ Route::delete('/detalle/{detalle}', [DetalleController::class, 'destroy']);
 
 
 Route::get('/categoria', [CategoriaController::class, 'index']);
+Route::post('/categoria', [CategoriaController::class, 'store']);
 
+Route::put('/categoria/{id_categoria}', [CategoriaController::class, 'update']);
+Route::delete('/categoria/{id_categoria}', [CategoriaController::class, 'destroy']);

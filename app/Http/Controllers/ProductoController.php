@@ -27,7 +27,7 @@ class ProductoController extends Controller
             'producto.modelo_prod', 'producto.codigo_prod', 'producto.descripcion_prod', 
             'producto.estado_prod', \DB::raw("CONCAT(proveedor.nombre_prove, ' ', proveedor.apellido_prove)
              AS nombre_proveedor"), 'categoria.nombre_cat', 'inventario.cantidad_inventario', 'producto.id_proveedor', 'producto.id_categoria' )
-            ->orderBy('producto.id_producto', 'asc')
+            ->orderBy('producto.nombre_producto', 'asc')
             ->where('producto.estado_prod', 1);
 
         if ($search) {
@@ -41,9 +41,6 @@ class ProductoController extends Controller
 
         $total = $query->count();
 
-        if ($total === 0) {
-            return response()->json(['message' => 'Producto no encontrado'], 404);
-        }
 
         $registros = $query->skip(($page - 1) * $perPage)
             ->take($perPage)
