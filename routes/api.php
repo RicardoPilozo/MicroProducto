@@ -33,6 +33,8 @@ Route::delete('/proveedores/{proveedor}', [ProveedorController::class, 'destroy'
 
 
 Route::get('/movimientos', [MovimientoController::class, 'index']);
+Route::get('/movimientosSalida', [MovimientoController::class, 'indexSalidas']);
+Route::get('/movimientosSalidaFecha/{fecha}', [MovimientoController::class, 'indexSalidasFecha']);
 Route::post('/movimientos', [MovimientoController::class, 'store']);
 Route::get('/movimientos/{movimiento}', [MovimientoController::class, 'show']);
 Route::put('/movimientos/{movimiento}', [MovimientoController::class, 'update']);
@@ -42,7 +44,7 @@ Route::delete('/movimientos/{movimiento}', [MovimientoController::class, 'destro
 Route::get('/detalle', [DetalleController::class, 'index']);
 Route::post('/detalle', [DetalleController::class, 'store']);
 Route::get('/detalle/{detalle}', [DetalleController::class, 'show']);
-Route::put('/detalle/{detalle}', [DetalleController::class, 'update']);
+Route::put('/detalle/{id_detalle}', [DetalleController::class, 'update']);
 Route::delete('/detalle/{detalle}', [DetalleController::class, 'destroy']);
 
 

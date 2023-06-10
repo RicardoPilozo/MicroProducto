@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\movimiento;
 use App\Models\usuario;
 use App\Models\cliente;
+use App\Models\detalle;
+
 use Illuminate\Http\Request;
+
 
 class MovimientoController extends Controller
 {
@@ -14,72 +17,171 @@ class MovimientoController extends Controller
      */
     public function index(Request $request)
     {
-        $perPage = $request->input('per_page', 10); // Número de elementos por página, 10 por defecto
-        $search = $request->input('search'); // Término de búsqueda
+        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
+        $search = $request->input('search'); // Término de búsqueda, opcional
 
-        $query = Movimiento::query();
+        $query = Movimiento::query()
+        ->orderBy('movimiento.id_movimiento', 'asc');
 
         // Aplicar el filtro de búsqueda si se proporciona
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('numero_comprobante', 'LIKE', "%$search%")
-                    ->orWhere('descripcion_mov', 'LIKE', "%$search%")
-                    ->orWhere('id_cliente', 'LIKE', "%$search%");
+            $query->where(function ($query) use ($search)  {
+                $q->where('movimiento.numero_comprobante', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.descripcion_mov', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.fecha_mov', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.id_cliente', 'LIKE', "%$search%");
             });
         }
+        $total = $query->count();
 
-        $movimientos = $query->paginate($perPage);
+        $registros = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
 
         return response()->json([
-            'data' => $movimientos->items(),
-            'current_page' => $movimientos->currentPage(),
-            'last_page' => $movimientos->lastPage(),
-            'total' => $movimientos->total(),
-            'message' => 'Lista de movimientos obtenida correctamente.',
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
         ]);
     }
 
+    public function indexSalidas(Request $request)
+    {
+        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
+        $search = $request->input('search'); // Término de búsqueda, opcional
+
+
+        $query = Movimiento::query()
+        ->join('usuario', 'movimiento.id_usuario', '=', 'usuario.id_usuario')
+        ->leftJoin('cliente', 'movimiento.id_cliente', '=', 'cliente.id_cliente')
+        ->select(
+            'movimiento.id_movimiento', 'movimiento.fecha_mov',
+            'movimiento.numero_comprobante','movimiento.tipo_mov',
+            'movimiento.descripcion_mov', 'movimiento.valor_total_mov',
+            'movimiento.id_cliente', 'movimiento.id_usuario',
+            \DB::raw("CONCAT(usuario.nombre_usu, ' ', usuario.apellido_usu) AS nombre_usuario"),
+            \DB::raw("CONCAT(cliente.nombre_clie, ' ', cliente.apellido_clie) AS nombre_cliente")
+        )
+        ->orderBy('movimiento.id_movimiento', 'asc')
+        ->where('movimiento.tipo_mov', "Salida");
+            
+
+        // Aplicar el filtro de búsqueda si se proporciona
+        if ($search) {
+            $query->where(function ($query) use ($search)  {
+                $query->where('movimiento.numero_comprobante', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.descripcion_mov', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.fecha_mov', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.id_cliente', 'LIKE', "%$search%");
+            });
+        }
+
+        $total = $query->count();
+
+        $registros = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        // Obtener los detalles agrupados por el ID del movimiento
+        $movimientoIds = $registros->pluck('id_movimiento')->toArray();
+
+        $detalles = Detalle::whereIn('id_movimiento', $movimientoIds)
+            ->get()
+            ->groupBy('id_movimiento');
+
+        // Asignar los detalles a cada registro de movimiento
+        $registros->each(function ($registro) use ($detalles) {
+            $idMovimiento = $registro->id_movimiento;
+            $registro->detalles = $detalles->get($idMovimiento);
+        });
+
+        return response()->json([
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+        ]);
+    }
+
+    public function indexSalidasFecha(Request $request, $fecha)
+    {
+        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
+        $search = $request->input('search'); // Término de búsqueda, opcional
+
+        $query = Movimiento::query()
+            ->join('usuario', 'movimiento.id_usuario', '=', 'usuario.id_usuario')
+            ->leftJoin('cliente', 'movimiento.id_cliente', '=', 'cliente.id_cliente')
+            ->select(
+                'movimiento.id_movimiento',
+                'movimiento.fecha_mov',
+                'movimiento.numero_comprobante',
+                'movimiento.tipo_mov',
+                'movimiento.descripcion_mov',
+                'movimiento.valor_total_mov',
+                'movimiento.id_cliente',
+                'movimiento.id_usuario',
+                \DB::raw("CONCAT(usuario.nombre_usu, ' ', usuario.apellido_usu) AS nombre_usuario"),
+                \DB::raw("CONCAT(cliente.nombre_clie, ' ', cliente.apellido_clie) AS nombre_cliente")
+            )
+            ->orderBy('movimiento.id_movimiento', 'asc')
+            ->where('movimiento.tipo_mov', 'Salida')
+            ->where('movimiento.fecha_mov', $fecha);
+
+        // Aplicar el filtro de búsqueda si se proporciona
+        if ($search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('movimiento.numero_comprobante', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.descripcion_mov', 'LIKE', "%$search%")
+                    ->orWhere('movimiento.id_cliente', 'LIKE', "%$search%");
+            });
+        }
+
+        $total = $query->count();
+
+        $registros = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        // Obtener los detalles agrupados por el ID del movimiento
+        $movimientoIds = $registros->pluck('id_movimiento')->toArray();
+
+        $detalles = Detalle::whereIn('id_movimiento', $movimientoIds)
+            ->get()
+            ->groupBy('id_movimiento');
+
+        // Asignar los detalles a cada registro de movimiento
+        $registros->each(function ($registro) use ($detalles) {
+            $idMovimiento = $registro->id_movimiento;
+            $registro->detalles = $detalles->get($idMovimiento);
+        });
+
+        return response()->json([
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+        ]);
+    }
+
+
+
     public function store(Request $request)
     {
-        // Validar los datos del request
-        $validatedData = $request->validate([
-            'fecha_mov' => 'required|date',
-            'numero_comprobante' => 'required|string|max:100',
-            'tipo_mov' => 'required|string|max:50',
-            'descripcion_mov' => 'required|string|max:200',
-            'valor_total_mov' => 'required|numeric',
-            'id_usuario' => 'required|integer|exists:usuario,id_usuario', // Validar la existencia del usuario en la tabla 'usuarios'
-            'id_cliente' => 'integer'
-        ]);
-
-        // Verificar si el usuario existe en la base de datos
-        $usuario = Usuario::find($validatedData['id_usuario']);
-        if (!$usuario) {
-            return response()->json(['error' => 'El usuario no existe'], 404);
-        }
-        // Verificar si el usuario existe en la base de datos
-        $usuario = Cliente::find($validatedData['id_cliente']);
-        if (!$usuario) {
-            return response()->json(['error' => 'El cliente no existe'], 404);
-        }
-        
-
-        // Crear una nueva instancia del modelo Movimiento
+              
         $movimiento = new Movimiento;
+        $movimiento->fecha_mov = $request->input('fecha_mov');
+        $movimiento->numero_comprobante = $request->input('numero_comprobante');
+        $movimiento->tipo_mov = $request->input('tipo_mov');
+        $movimiento->descripcion_mov = $request->input('descripcion_mov');
+        $movimiento->valor_total_mov = $request->input('valor_total_mov');
+        $movimiento->id_usuario = $request->input('id_usuario');
+        $movimiento->id_cliente = $request->input('id_cliente');
 
-        // Asignar los valores validados a las propiedades del modelo
-        $movimiento->fecha_mov = $validatedData['fecha_mov'];
-        $movimiento->numero_comprobante = $validatedData['numero_comprobante'];
-        $movimiento->tipo_mov = $validatedData['tipo_mov'];
-        $movimiento->descripcion_mov = $validatedData['descripcion_mov'];
-        $movimiento->valor_total_mov = $validatedData['valor_total_mov'];
-        $movimiento->id_usuario = $validatedData['id_usuario'];
-        $movimiento->id_cliente = $validatedData['id_cliente'];
-
-        // Guardar el movimiento en la base de datos
         $movimiento->save();
-
-        // Retorna o devuelve una respuesta adecuada
         return response()->json(['message' => 'Movimiento creado con éxito'], 201);
     }
 

@@ -12,16 +12,18 @@ class DetalleController extends Controller
 /*************************************************************************** */
     public function index(Request $request)
     {
-        // Obtener parámetros de la consulta
-        $perPage = $request->input('per_page', 10);
-        $search = $request->input('search');
+        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
+        $search = $request->input('search'); // Término de búsqueda, opcional
+
 
         // Consulta base
-        $query = Detalle::query();
+        $query = Detalle::query()
+        ->orderBy('detalle.id_movimiento', 'asc');
 
         // Aplicar búsqueda especializada si se proporciona
         if ($search) {
-            $query->where(function ($innerQuery) use ($search) {
+            $query->where(function ($query) use ($search)  {
                 $innerQuery->where('id_detalle', 'LIKE', "%$search%")
                     ->orWhere('cantidad', 'LIKE', "%$search%")
                     ->orWhere('valor_unitario', 'LIKE', "%$search%")
@@ -30,43 +32,31 @@ class DetalleController extends Controller
                     ->orWhere('id_producto', 'LIKE', "%$search%");
             });
         }
+        $total = $query->count();
+        $registros = $query->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get();
 
-        // Obtener los resultados paginados
-        $detalles = $query->paginate($perPage);
-
-        return response()->json($detalles);
+        return response()->json([
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+        ]);
     }
 /*************************************************************************** */
     public function store(Request $request)
     {
-        // Validar los datos de entrada
-        $validator = Validator::make($request->all(), [
-            'cantidad' => 'required|integer',
-            'valor_unitario' => 'required|numeric',
-            'id_inventario' => 'required|integer',
-            'id_movimiento' => 'required|integer',
-            'id_producto' => 'required|integer',
-        ]);
+        $detalle = new Detalle;
+        $detalle->cantidad = $request->input('cantidad');
+        $detalle->valor_unitario = $request->input('valor_unitario');
+        $detalle->id_inventario = $request->input('id_inventario');
+        $detalle->id_movimiento = $request->input('id_movimiento');
+        $detalle->id_producto = $request->input('id_producto');
 
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
+        $detalle->save();
 
-        // Crear el detalle
-        $detalle = Detalle::create([
-            'cantidad' => $request->input('cantidad'),
-            'valor_unitario' => $request->input('valor_unitario'),
-            'id_inventario' => $request->input('id_inventario'),
-            'id_movimiento' => $request->input('id_movimiento'),
-            'id_producto' => $request->input('id_producto'),
-        ]);
-
-        if (!$detalle) {
-            return response()->json(['error' => 'No se pudo crear el detalle'], 500);
-        }
-
-        // Devolver la respuesta exitosa
-        return response()->json(['message' => 'Detalle creado correctamente', 'detalle' => $detalle], 201);
+        return response()->json(['message' => 'Detalle agregado exitosamente'], 201);
     }
 /*************************************************************************** */
     public function show(Detalle $detalle)
@@ -84,24 +74,24 @@ class DetalleController extends Controller
         return response()->json($detalle);
     }
 /*************************************************************************** */
-    public function update(Request $request, detalle $detalle)
+    public function update(Request $request,  $id_detalle)
     {
-        // Comprobar si el detalle existe
-        $existingDetalle = Detalle::find($detalle->id_detalle);
+        $detalle = Detalle::find($id_detalle);
 
-        if (!$existingDetalle) {
-            return response()->json(['message' => 'El detalle no existe'], 404);
+        if (!$detalle) {
+            return response()->json(['message' => 'Detalle no encontrado'], 404);
         }
 
-        // Actualizar los datos del detalle
-        $existingDetalle->cantidad = $request->input('cantidad');
-        $existingDetalle->valor_unitario = $request->input('valor_unitario');
-        // Actualizar los otros campos según corresponda
+        $detalle = new Detalle;
+        $detalle->cantidad = $request->input('cantidad');
+        $detalle->valor_unitario = $request->input('valor_unitario');
+        $detalle->id_inventario = $request->input('id_inventario');
+        $detalle->id_movimiento = $request->input('id_movimiento');
+        $detalle->id_producto = $request->input('id_producto');
+        $confirmacion = true;
+        $detalle->save();
 
-        // Guardar los cambios en la base de datos
-        $existingDetalle->save();
-
-        return response()->json(['message' => 'Detalle actualizado correctamente'], 200);
+        return response()->json(['message' => 'Detalle actualizado con éxito', 'data' => $detalle, 'confirmacion' => $confirmacion], 200);
     }
 /*************************************************************************** */
     public function destroy(Detalle $detalle)
