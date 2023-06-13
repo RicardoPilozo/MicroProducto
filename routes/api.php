@@ -9,6 +9,7 @@ use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\DetalleController;
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ClienteController;
 
 Route::get('/producto', [ProductoController::class, 'index']);
 Route::post('/aggProducto', [ProductoController::class, 'store']);
@@ -50,6 +51,10 @@ Route::delete('/detalle/{detalle}', [DetalleController::class, 'destroy']);
 
 Route::get('/categoria', [CategoriaController::class, 'index']);
 Route::post('/categoria', [CategoriaController::class, 'store']);
-
 Route::put('/categoria/{id_categoria}', [CategoriaController::class, 'update']);
 Route::delete('/categoria/{id_categoria}', [CategoriaController::class, 'destroy']);
+
+
+Route::get('/clientes', [ClienteController::class, 'index']);
+Route::get('/cliente/{cedula}', [ClienteController::class, 'ObtenerClienteCedula']);
+Route::post('/clientes', [ClienteController::class, 'store']);

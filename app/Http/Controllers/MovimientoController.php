@@ -89,8 +89,10 @@ class MovimientoController extends Controller
         $movimientoIds = $registros->pluck('id_movimiento')->toArray();
 
         $detalles = Detalle::whereIn('id_movimiento', $movimientoIds)
-            ->get()
-            ->groupBy('id_movimiento');
+        ->join('producto', 'detalle.id_producto', '=', 'producto.id_producto')
+        ->select('detalle.*', 'producto.nombre_producto')
+        ->get()
+        ->groupBy('id_movimiento');
 
         // Asignar los detalles a cada registro de movimiento
         $registros->each(function ($registro) use ($detalles) {
@@ -182,7 +184,7 @@ class MovimientoController extends Controller
         $movimiento->id_cliente = $request->input('id_cliente');
 
         $movimiento->save();
-        return response()->json(['message' => 'Movimiento creado con éxito'], 201);
+        return response()->json(['message' => 'Movimiento creado con éxito', 'data' => $movimiento]);
     }
 
     public function show(Movimiento $movimiento)

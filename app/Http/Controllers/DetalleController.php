@@ -56,7 +56,7 @@ class DetalleController extends Controller
 
         $detalle->save();
 
-        return response()->json(['message' => 'Detalle agregado exitosamente'], 201);
+        return response()->json(['message' => 'Detalle agregado exitosamente', 'data' => $detalle]);
     }
 /*************************************************************************** */
     public function show(Detalle $detalle)
