@@ -10,6 +10,7 @@ use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\DetalleController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\TransaccionesController;
 
 Route::get('/producto', [ProductoController::class, 'index']);
 Route::post('/aggProducto', [ProductoController::class, 'store']);
@@ -58,3 +59,6 @@ Route::delete('/categoria/{id_categoria}', [CategoriaController::class, 'destroy
 Route::get('/clientes', [ClienteController::class, 'index']);
 Route::get('/cliente/{cedula}', [ClienteController::class, 'ObtenerClienteCedula']);
 Route::post('/clientes', [ClienteController::class, 'store']);
+
+Route::get('/transacciones ', [TransaccionesController::class, 'index']);
+Route::post('/transacciones', [TransaccionesController::class, 'store']);

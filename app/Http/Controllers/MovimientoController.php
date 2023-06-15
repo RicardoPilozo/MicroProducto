@@ -49,7 +49,7 @@ class MovimientoController extends Controller
 
     public function indexSalidas(Request $request)
     {
-        $perPage = intval($request->input('per_page', 10)); // Número de elementos por página, valor por defecto: 10
+        $perPage = intval($request->input('per_page', 100)); // Número de elementos por página, valor por defecto: 10
         $page = intval($request->input('page', 1)); // Página actual, valor por defecto: 1
         $search = $request->input('search'); // Término de búsqueda, opcional
 
@@ -57,11 +57,18 @@ class MovimientoController extends Controller
         $query = Movimiento::query()
         ->join('usuario', 'movimiento.id_usuario', '=', 'usuario.id_usuario')
         ->leftJoin('cliente', 'movimiento.id_cliente', '=', 'cliente.id_cliente')
+        ->leftJoin('transacciones', 'movimiento.id_transacciones', '=', 'transacciones.id_transacciones')
         ->select(
-            'movimiento.id_movimiento', 'movimiento.fecha_mov',
-            'movimiento.numero_comprobante','movimiento.tipo_mov',
-            'movimiento.descripcion_mov', 'movimiento.valor_total_mov',
-            'movimiento.id_cliente', 'movimiento.id_usuario',
+            'movimiento.id_movimiento',
+            'movimiento.fecha_mov',
+            'movimiento.numero_comprobante',
+            'movimiento.tipo_mov',
+            'movimiento.descripcion_mov', 
+            'movimiento.valor_total_mov',
+            'movimiento.id_cliente', 
+            'movimiento.id_usuario',
+            'movimiento.id_transacciones',
+            'transacciones.tipo_pago',
             \DB::raw("CONCAT(usuario.nombre_usu, ' ', usuario.apellido_usu) AS nombre_usuario"),
             \DB::raw("CONCAT(cliente.nombre_clie, ' ', cliente.apellido_clie) AS nombre_cliente")
         )
@@ -126,6 +133,7 @@ class MovimientoController extends Controller
                 'movimiento.valor_total_mov',
                 'movimiento.id_cliente',
                 'movimiento.id_usuario',
+                'movimiento.id_transacciones',
                 \DB::raw("CONCAT(usuario.nombre_usu, ' ', usuario.apellido_usu) AS nombre_usuario"),
                 \DB::raw("CONCAT(cliente.nombre_clie, ' ', cliente.apellido_clie) AS nombre_cliente")
             )
@@ -182,6 +190,7 @@ class MovimientoController extends Controller
         $movimiento->valor_total_mov = $request->input('valor_total_mov');
         $movimiento->id_usuario = $request->input('id_usuario');
         $movimiento->id_cliente = $request->input('id_cliente');
+        $movimiento->id_transacciones = $request->input('id_transacciones');
 
         $movimiento->save();
         return response()->json(['message' => 'Movimiento creado con éxito', 'data' => $movimiento]);
