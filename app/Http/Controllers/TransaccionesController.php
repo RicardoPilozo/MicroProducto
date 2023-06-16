@@ -19,6 +19,19 @@ class TransaccionesController extends Controller
 
         // Consulta base
         $query = Transacciones::query()
+        //->join('movimiento', 'movimiento.id_transacciones', '=', 'transacciones.id_transacciones')
+        ->select(
+            'transacciones.id_transacciones',
+            'transacciones.tipo_transaccion',
+            'transacciones.tipo_pago',
+            'transacciones.monto_transaccion',
+            'transacciones.descripción',
+            'transacciones.created_at',
+            'transacciones.updated_at'//,
+            //'movimiento.fecha_mov',
+            //'movimiento.tipo_mov',
+            //'movimiento.numero_comprobante'
+            )
         ->orderBy('transacciones.id_transacciones', 'asc');
 
         // Aplicar búsqueda especializada si se proporciona
