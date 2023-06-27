@@ -24,7 +24,7 @@ class ClienteController extends Controller
         // Aplicar el filtro de búsqueda si se proporciona
         if ($search) {
             $query->where(function ($query) use ($search)  {
-                $q->where('cliente.nombre_clie', 'LIKE', "%$search%")
+                $query->where('cliente.nombre_clie', 'LIKE', "%$search%")
                     ->orWhere('cliente.apellido_clie', 'LIKE', "%$search%")
                     ->orWhere('cliente.cedula_clie', 'LIKE', "%$search%")
                     ->orWhere('cliente.correo_clie', 'LIKE', "%$search%");
@@ -69,6 +69,31 @@ class ClienteController extends Controller
 
         return response()->json(['message' => 'Cliente agregado exitosamente', 'data' => $cliente]);
     
+    }
+
+    public function update(Request $request, $id_cliente)
+    {
+        $cliente = Cliente::find($id_cliente);
+
+        if (!$cliente) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cliente no encontrado'
+            ]);
+        }
+    
+        // Actualizar los datos del proveedor campo por campo
+        $cliente->nombre_clie = $request->input('nombre_clie');
+        $cliente->apellido_clie = $request->input('apellido_clie');
+        $cliente->cedula_clie = $request->input('cedula_clie');
+        $cliente->telefono_clie = $request->input('telefono_clie');
+        $cliente->correo_clie = $request->input('correo_clie');
+        $cliente->direccion_clie = $request->input('direccion_clie');
+        $cliente->save();
+    
+        return response()->json([
+            'success' => true, 'message' => 'Proveedor actualizado exitosamente', 'data' => $cliente
+        ]);
     }
     
 }
