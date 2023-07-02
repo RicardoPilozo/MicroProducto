@@ -191,6 +191,7 @@ class MovimientoController extends Controller
         $movimiento->id_usuario = $request->input('id_usuario');
         $movimiento->id_cliente = $request->input('id_cliente');
         $movimiento->id_transacciones = $request->input('id_transacciones');
+        $movimiento->ganancia_mov = $request->input('ganancia_mov');
 
         $movimiento->save();
         return response()->json(['message' => 'Movimiento creado con éxito', 'data' => $movimiento]);

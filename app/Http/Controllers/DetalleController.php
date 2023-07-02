@@ -53,6 +53,7 @@ class DetalleController extends Controller
         $detalle->id_inventario = $request->input('id_inventario');
         $detalle->id_movimiento = $request->input('id_movimiento');
         $detalle->id_producto = $request->input('id_producto');
+        $detalle->ganancia_detalle = $request->input('ganancia_detalle');
 
         $detalle->save();
 
@@ -88,6 +89,7 @@ class DetalleController extends Controller
         $detalle->id_inventario = $request->input('id_inventario');
         $detalle->id_movimiento = $request->input('id_movimiento');
         $detalle->id_producto = $request->input('id_producto');
+        $detalle->ganancia_detalle = $request->input('ganancia_detalle');
         $confirmacion = true;
         $detalle->save();
 

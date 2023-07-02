@@ -61,5 +61,8 @@ Route::get('/cliente/{cedula}', [ClienteController::class, 'ObtenerClienteCedula
 Route::post('/clientes', [ClienteController::class, 'store']);
 Route::put('/clientes/{cliente}', [ClienteController::class, 'update']);
 
-Route::get('/transacciones ', [TransaccionesController::class, 'index']);
+Route::get('/transacciones', [TransaccionesController::class, 'index']);
 Route::post('/transacciones', [TransaccionesController::class, 'store']);
+Route::get('/transacciones/por-semana', [TransaccionesController::class, 'getTransaccionesporSemana']);
+Route::get('/transacciones/semanas-meses', [TransaccionesController::class, 'obtenerSemanasMeses']);
+
