@@ -167,4 +167,33 @@ class ProductoController extends Controller
         ], 200);
     }
 
+    public function marcas(Request $request)
+    {
+        $perPage = intval($request->input('per_page', 10));
+        $page = intval($request->input('page', 1));
+        $search = $request->input('search');
+
+        $marcasQuery = Producto::select('marca_prod')->distinct();
+
+        if ($search) {
+            $marcasQuery->where('marca_prod', 'LIKE', "%$search%");
+        }
+
+        $marcas = $marcasQuery->get();
+        $total = $marcas->count();
+
+        $registros = $marcas->skip(($page - 1) * $perPage)->take($perPage);
+
+        return response()->json([
+            'data' => $registros->toArray(),
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+        ]);
+    }
+
+
+
+    
+
 }

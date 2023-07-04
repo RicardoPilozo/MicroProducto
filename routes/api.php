@@ -17,6 +17,7 @@ Route::post('/aggProducto', [ProductoController::class, 'store']);
 Route::get('/buscarProducto', [ProductoController::class, 'buscarPorNombre']);
 Route::put('/actualizarProducto/{id_producto}', [ProductoController::class, 'update']);
 Route::delete('/eliminarProducto/{id_producto}', [ProductoController::class, 'destroy']);
+Route::get('marcasProductos', [ProductoController::class, 'marcas']);
 
 
 Route::get('/inventario', [InventarioController::class, 'index']);
