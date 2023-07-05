@@ -42,6 +42,7 @@ Route::post('/movimientos', [MovimientoController::class, 'store']);
 Route::get('/movimientos/{movimiento}', [MovimientoController::class, 'show']);
 Route::put('/movimientos/{movimiento}', [MovimientoController::class, 'update']);
 Route::delete('/movimientos/{movimiento}', [MovimientoController::class, 'destroy']);
+Route::get('/MovProductosSalida', [MovimientoController::class, 'productosSalida']);
 
 
 Route::get('/detalle', [DetalleController::class, 'index']);

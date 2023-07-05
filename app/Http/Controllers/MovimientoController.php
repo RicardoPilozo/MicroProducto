@@ -256,4 +256,55 @@ class MovimientoController extends Controller
         // retorna o devolver una respuesta
         return response()->json(['message' => 'Movimiento eliminado con éxito']);
     }
+
+
+    public function productosSalida(Request $request)
+    {
+        $perPage = intval($request->input('per_page', 10));
+        $page = intval($request->input('page', 1));
+        $search = $request->input('search');
+
+        $query = Movimiento::where('tipo_mov', 'Salida')
+            ->join('detalle', 'movimiento.id_movimiento', '=', 'detalle.id_movimiento')
+            ->join('producto', 'detalle.id_producto', '=', 'producto.id_producto')
+            ->join('usuario', 'movimiento.id_usuario', '=', 'usuario.id_usuario')
+            ->select('producto.nombre_producto', 'producto.modelo_prod', 'producto.marca_prod', 'producto.descripcion_prod', 'movimiento.fecha_mov', 'movimiento.id_usuario', 
+            \DB::raw("CONCAT(usuario.nombre_usu, ' ', usuario.apellido_usu) AS nombre_usuario"))
+            ->selectRaw('SUM(detalle.cantidad) as total_cantidad')
+            ->groupBy('producto.nombre_producto', 'producto.modelo_prod', 'producto.marca_prod', 'producto.descripcion_prod', 'movimiento.fecha_mov', 'movimiento.id_usuario', 'usuario.nombre_usu', 'usuario.apellido_usu')
+            ->orderBy('movimiento.fecha_mov', 'desc');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('producto.nombre_producto', 'like', "%{$search}%")
+                    ->orWhere('producto.modelo_prod', 'like', "%{$search}%")
+                    ->orWhere('producto.marca_prod', 'like', "%{$search}%")
+                    ->orWhere('producto.descripcion_prod', 'like', "%{$search}%")
+                    ->orWhere('movimiento.fecha_mov', 'like', "%{$search}%")
+                    ->orWhere('movimiento.id_usuario', 'like', "%{$search}%");
+            });
+        }
+
+        // Obtiene el total de registros sin aplicar la paginación
+        $total = $query->count();
+
+        // Aplica la paginación y obtiene los registros
+        $registros = $query->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        return response()->json([
+            'data' => $registros,
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+        ]);
+    }
+
+    
+    
+
+
+
+
 }
