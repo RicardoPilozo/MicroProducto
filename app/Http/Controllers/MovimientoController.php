@@ -70,10 +70,13 @@ class MovimientoController extends Controller
             'movimiento.id_transacciones',
             'transacciones.tipo_pago',
             \DB::raw("CONCAT(usuario.nombre_usu, ' ', usuario.apellido_usu) AS nombre_usuario"),
-            \DB::raw("CONCAT(cliente.nombre_clie, ' ', cliente.apellido_clie) AS nombre_cliente")
+            \DB::raw("CONCAT(cliente.nombre_clie, ' ', cliente.apellido_clie) AS nombre_cliente"),
+            'movimiento.estado_mov',
+            'movimiento.ganancia_mov'
         )
         ->orderBy('movimiento.id_movimiento', 'asc')
-        ->where('movimiento.tipo_mov', "Salida");
+        ->where('movimiento.tipo_mov', "Salida")
+        ->where('movimiento.estado_mov', 1);
             
 
         // Aplicar el filtro de búsqueda si se proporciona
@@ -191,8 +194,8 @@ class MovimientoController extends Controller
         $movimiento->id_usuario = $request->input('id_usuario');
         $movimiento->id_cliente = $request->input('id_cliente');
         $movimiento->id_transacciones = $request->input('id_transacciones');
-        $movimiento->ganancia_mov = $request->input('ganancia_mov');
-
+        $movimiento->ganancia_mov = $request->input('ganancia_mov');    
+        $movimiento->estado_mov = $request->input('estado_mov');
         $movimiento->save();
         return response()->json(['message' => 'Movimiento creado con éxito', 'data' => $movimiento]);
     }

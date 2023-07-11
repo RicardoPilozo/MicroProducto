@@ -11,6 +11,8 @@ use App\Http\Controllers\DetalleController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\TransaccionesController;
+use App\Http\Controllers\DevolucionController;
+use App\Http\Controllers\ReportesController;
 
 Route::get('/producto', [ProductoController::class, 'index']);
 Route::post('/aggProducto', [ProductoController::class, 'store']);
@@ -68,3 +70,11 @@ Route::post('/transacciones', [TransaccionesController::class, 'store']);
 Route::get('/transacciones/por-semana', [TransaccionesController::class, 'getTransaccionesporSemana']);
 Route::get('/transacciones/semanas-meses', [TransaccionesController::class, 'obtenerSemanasMeses']);
 
+
+Route::get('/devolucion', [DevolucionController::class, 'index']);
+Route::post('/devolucion', [DevolucionController::class, 'store']);
+
+
+Route::get('/reporteGanancia', [ReportesController::class, 'obtenerGananciasSemanales']);
+Route::get('/reporteGananciaMes', [ReportesController::class, 'obtenerGananciasMes']);
+Route::get('/topProductosVendidosPorMes', [ReportesController::class, 'topProductosVendidosPorMes']);
